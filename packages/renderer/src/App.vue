@@ -2,11 +2,13 @@
 import ReactiveCounter from '/@/components/ReactiveCounter.vue';
 import ReactiveHash from '/@/components/ReactiveHash.vue';
 import ElectronVersions from '/@/components/ElectronVersions.vue';
+import './../index.css';
 
 const APP_VERSION = import.meta.env.VITE_APP_VERSION;
 </script>
 
 <template>
+  <div class="text-blue-500"> hello tailwind </div>
   <img
     alt="Vue logo"
     src="../assets/logo.svg"
@@ -50,20 +52,3 @@ const APP_VERSION = import.meta.env.VITE_APP_VERSION;
     <code>packages/renderer/src/App.vue</code> to test hot module replacement.
   </p>
 </template>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin: 60px auto;
-  max-width: 700px;
-}
-
-fieldset {
-  margin: 2rem;
-  padding: 1rem;
-}
-</style>

@@ -1,9 +1,29 @@
 import {app, BrowserWindow} from 'electron';
+const windowStateKeeper = require('electron-window-state');
+import * as Splashscreen from '@trodi/electron-splashscreen';
 import {join, resolve} from 'node:path';
 
 async function createWindow() {
-  const browserWindow = new BrowserWindow({
+  const mainWindowState = windowStateKeeper({
+    defaultWidth: 1400,
+    defaultHeight: 768,
+  });
+
+  const mainOpts: Electron.BrowserWindowConstructorOptions = {
     show: false, // Use the 'ready-to-show' event to show the instantiated BrowserWindow.
+    width: mainWindowState.width,
+    height: mainWindowState.height,
+    x: mainWindowState.x,
+    y: mainWindowState.y,
+    minWidth: 520,
+    minHeight: 520,
+    frame: false,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: true,
+    trafficLightPosition: {
+      x: 20,
+      y: 20,
+    },
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -11,7 +31,25 @@ async function createWindow() {
       webviewTag: false, // The webview tag is not recommended. Consider alternatives like an iframe or Electron's BrowserView. @see https://www.electronjs.org/docs/latest/api/webview-tag#warning
       preload: join(app.getAppPath(), 'packages/preload/dist/index.cjs'),
     },
-  });
+  };
+
+  const config: Splashscreen.Config = {
+    windowOpts: mainOpts,
+    templateUrl: resolve(__dirname, '../../renderer/splash.html'),
+    delay: 0,
+    splashScreenOpts: {
+      width: 640,
+      height: 480,
+      transparent: true,
+    },
+  };
+
+  const mainWindow: BrowserWindow = Splashscreen.initSplashScreen(config);
+
+  // Let us register listeners on the window, so we can update the state
+  // automatically (the listeners will be removed when the window is closed)
+  // and restore the maximized or full screen state
+  mainWindowState.manage(mainWindow);
 
   /**
    * If the 'show' property of the BrowserWindow's constructor is omitted from the initialization options,
@@ -21,11 +59,11 @@ async function createWindow() {
    *
    * @see https://github.com/electron/electron/issues/25012 for the afford mentioned issue.
    */
-  browserWindow.on('ready-to-show', () => {
-    browserWindow?.show();
+  mainWindow.on('ready-to-show', () => {
+    mainWindow?.show();
 
     if (import.meta.env.DEV) {
-      browserWindow?.webContents.openDevTools();
+      mainWindow?.webContents.openDevTools();
     }
   });
 
@@ -36,7 +74,7 @@ async function createWindow() {
     /**
      * Load from the Vite dev server for development.
      */
-    await browserWindow.loadURL(import.meta.env.VITE_DEV_SERVER_URL);
+    await mainWindow.loadURL(import.meta.env.VITE_DEV_SERVER_URL);
   } else {
     /**
      * Load from the local file system for production and test.
@@ -47,10 +85,10 @@ async function createWindow() {
      * @see https://github.com/nodejs/node/issues/12682
      * @see https://github.com/electron/electron/issues/6869
      */
-    await browserWindow.loadFile(resolve(__dirname, '../../renderer/dist/index.html'));
+    await mainWindow.loadFile(resolve(__dirname, '../../renderer/dist/index.html'));
   }
 
-  return browserWindow;
+  return mainWindow;
 }
 
 /**
