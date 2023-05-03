@@ -1,22 +1,18 @@
 import {app, BrowserWindow} from 'electron';
-const windowStateKeeper = require('electron-window-state');
 import * as Splashscreen from '@trodi/electron-splashscreen';
+import Store from 'electron-store';
 import {join, resolve} from 'node:path';
 
-async function createWindow() {
-  const mainWindowState = windowStateKeeper({
-    defaultWidth: 1400,
-    defaultHeight: 768,
-  });
+const STORE = new Store();
 
+async function createWindow() {
   const mainOpts: Electron.BrowserWindowConstructorOptions = {
     show: false, // Use the 'ready-to-show' event to show the instantiated BrowserWindow.
-    width: mainWindowState.width,
-    height: mainWindowState.height,
-    x: mainWindowState.x,
-    y: mainWindowState.y,
-    minWidth: 520,
-    minHeight: 520,
+    width: 1024,
+    height: 768,
+    minWidth: 840,
+    minHeight: 640,
+    fullscreen: false,
     frame: false,
     titleBarStyle: 'hidden',
     titleBarOverlay: true,
@@ -33,6 +29,8 @@ async function createWindow() {
     },
   };
 
+  Object.assign(mainOpts, STORE.get('winBounds'));
+
   const config: Splashscreen.Config = {
     windowOpts: mainOpts,
     templateUrl: resolve(__dirname, '../../renderer/splash.html'),
@@ -45,12 +43,9 @@ async function createWindow() {
   };
 
   const mainWindow: BrowserWindow = Splashscreen.initSplashScreen(config);
-
-  // Let us register listeners on the window, so we can update the state
-  // automatically (the listeners will be removed when the window is closed)
-  // and restore the maximized or full screen state
-  mainWindowState.manage(mainWindow);
-
+  if (mainOpts.fullscreen) {
+    mainWindow.maximize();
+  }
   /**
    * If the 'show' property of the BrowserWindow's constructor is omitted from the initialization options,
    * it then defaults to 'true'. This can cause flickering as the window loads the html content,
@@ -65,6 +60,17 @@ async function createWindow() {
     if (import.meta.env.DEV) {
       mainWindow?.webContents.openDevTools();
     }
+  });
+
+  mainWindow.on('close', () => {
+    Object.assign(
+      mainOpts,
+      {
+        fullscreen: mainWindow.isMaximized(),
+      },
+      mainWindow.getNormalBounds(),
+    );
+    STORE.set('winBounds', mainOpts); // saves window's properties using electron-store
   });
 
   /**
