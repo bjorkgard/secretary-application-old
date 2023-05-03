@@ -2,13 +2,12 @@
 import ReactiveCounter from '/@/components/ReactiveCounter.vue';
 import ReactiveHash from '/@/components/ReactiveHash.vue';
 import ElectronVersions from '/@/components/ElectronVersions.vue';
-import './../index.css';
 
 const APP_VERSION = import.meta.env.VITE_APP_VERSION;
 </script>
 
 <template>
-  <div class="text-blue-500"> hello tailwind </div>
+  <div class="text-blue-500 text-base"> Hello tailwind </div>
   <img
     alt="Vue logo"
     src="../assets/logo.svg"

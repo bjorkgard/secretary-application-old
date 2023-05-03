@@ -1,12 +1,11 @@
 import {app, BrowserWindow} from 'electron';
-import * as Splashscreen from '@trodi/electron-splashscreen';
 import Store from 'electron-store';
 import {join, resolve} from 'node:path';
 
 const STORE = new Store();
 
 async function createWindow() {
-  const mainOpts: Electron.BrowserWindowConstructorOptions = {
+  const windowConfig = {
     show: false, // Use the 'ready-to-show' event to show the instantiated BrowserWindow.
     width: 1024,
     height: 768,
@@ -14,7 +13,6 @@ async function createWindow() {
     minHeight: 640,
     fullscreen: false,
     frame: false,
-    titleBarStyle: 'hidden',
     titleBarOverlay: true,
     trafficLightPosition: {
       x: 20,
@@ -29,21 +27,10 @@ async function createWindow() {
     },
   };
 
-  Object.assign(mainOpts, STORE.get('winBounds'));
+  Object.assign(windowConfig, STORE.get('winBounds'));
+  const mainWindow = new BrowserWindow(windowConfig);
 
-  const config: Splashscreen.Config = {
-    windowOpts: mainOpts,
-    templateUrl: resolve(__dirname, '../../renderer/splash.html'),
-    delay: 0,
-    splashScreenOpts: {
-      width: 640,
-      height: 480,
-      transparent: true,
-    },
-  };
-
-  const mainWindow: BrowserWindow = Splashscreen.initSplashScreen(config);
-  if (mainOpts.fullscreen) {
+  if (windowConfig.fullscreen) {
     mainWindow.maximize();
   }
   /**
@@ -64,13 +51,13 @@ async function createWindow() {
 
   mainWindow.on('close', () => {
     Object.assign(
-      mainOpts,
+      windowConfig,
       {
         fullscreen: mainWindow.isMaximized(),
       },
       mainWindow.getNormalBounds(),
     );
-    STORE.set('winBounds', mainOpts); // saves window's properties using electron-store
+    STORE.set('winBounds', windowConfig); // saves window's properties using electron-store
   });
 
   /**
